@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import emailjs from "@emailjs/browser";
+
 
 const contactLinks = [
   {
@@ -35,39 +37,54 @@ const contactLinks = [
 
 export function ContactSection() {
   const { toast } = useToast();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     message: "",
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
+  // ✅ REAL EMAIL SEND FUNCTION
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+
+
+  try {
+    await emailjs.send(
+      import.meta.env.VITE_EMAILJS_SERVICE_ID,
+      import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+      {
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
+      },
+      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+    );
+
     toast({
       title: "Message sent!",
-      description: "Thank you for reaching out. I'll get back to you soon.",
+      description: "Your message has been sent to your email.",
     });
-    
+
     setFormData({ name: "", email: "", message: "" });
-    setIsSubmitting(false);
-  };
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Message send failed. Try again.",
+    });
+  }
+
+  setIsSubmitting(false);
+};
 
   return (
     <section id="contact" className="relative py-24 lg:py-32 overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0">
-        <div className="floating-orb w-96 h-96 -bottom-48 right-0 opacity-10" />
-        <div className="floating-orb w-64 h-64 top-20 left-1/4 opacity-10" style={{ animationDelay: "2s" }} />
-      </div>
-
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
-        {/* Section Header */}
+
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -79,11 +96,12 @@ export function ContactSection() {
             Get In <span className="gradient-text">Touch</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Have a project in mind? Let's work together to create something amazing.
+            Have a project in mind? Let's work together.
           </p>
         </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 max-w-5xl mx-auto">
+
           {/* Contact Links */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -92,8 +110,10 @@ export function ContactSection() {
             transition={{ duration: 0.6 }}
             className="space-y-4"
           >
-            <h3 className="text-2xl font-semibold mb-6">Contact Information</h3>
-            
+            <h3 className="text-2xl font-semibold mb-6">
+              Contact Information
+            </h3>
+
             {contactLinks.map((link, index) => (
               <motion.a
                 key={link.label}
@@ -104,16 +124,14 @@ export function ContactSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="glass-card-hover flex items-center gap-4 p-4 group"
+                className="glass-card-hover flex items-center gap-4 p-4"
               >
-                <div className="p-3 rounded-xl bg-primary/20 group-hover:bg-primary/30 transition-colors">
+                <div className="p-3 rounded-xl bg-primary/20">
                   <link.icon className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{link.label}</p>
-                  <p className="font-medium group-hover:text-primary transition-colors">
-                    {link.value}
-                  </p>
+                  <p className="font-medium">{link.value}</p>
                 </div>
               </motion.a>
             ))}
@@ -131,54 +149,49 @@ export function ContactSection() {
               <MessageSquare className="w-6 h-6 text-primary" />
               <h3 className="text-2xl font-semibold">Send a Message</h3>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Input
-                  placeholder="Your Name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                  className="bg-secondary/50 border-border/50 focus:border-primary h-12"
-                />
-              </div>
-              <div>
-                <Input
-                  type="email"
-                  placeholder="Your Email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                  className="bg-secondary/50 border-border/50 focus:border-primary h-12"
-                />
-              </div>
-              <div>
-                <Textarea
-                  placeholder="Your Message"
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  required
-                  rows={5}
-                  className="bg-secondary/50 border-border/50 focus:border-primary resize-none"
-                />
-              </div>
+              <Input
+                placeholder="Your Name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                required
+              />
+
+              <Input
+                type="email"
+                placeholder="Your Email"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                required
+              />
+
+              <Textarea
+                placeholder="Your Message"
+                rows={5}
+                value={formData.message}
+                onChange={(e) =>
+                  setFormData({ ...formData, message: e.target.value })
+                }
+                required
+              />
+
               <Button
                 type="submit"
                 variant="hero"
                 className="w-full"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? (
-                  "Sending..."
-                ) : (
-                  <>
-                    Send Message
-                    <Send className="w-4 h-4" />
-                  </>
-                )}
+                {isSubmitting ? "Sending..." : "Send Message"}
+                <Send className="w-4 h-4 ml-2" />
               </Button>
             </form>
           </motion.div>
+
         </div>
       </div>
     </section>
